@@ -1,5 +1,6 @@
 package garden.entity;
 
+import garden.controller.model.GardenData;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,7 +25,7 @@ public class Needs {
 
  @EqualsAndHashCode.Exclude
  @ToString.Exclude
- @ManyToMany(mappedBy = "needs")
- private Set<Plant> plant = new HashSet<>();
+ @ManyToMany(mappedBy = "needs", cascade = CascadeType.PERSIST)
+ private Set<Location> locations = new HashSet<>();
 
 }

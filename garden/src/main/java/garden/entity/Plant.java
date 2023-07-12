@@ -25,11 +25,4 @@ public class Plant {
  @ManyToOne(cascade = CascadeType.ALL)
  @JoinColumn(name = "location_id", nullable = false)
  private Location location;
-
- @EqualsAndHashCode.Exclude
- @ToString.Exclude
- @ManyToMany(cascade = CascadeType.PERSIST)
- @JoinTable(name = "plant_needs", joinColumns = @JoinColumn(name = "plant_id"), inverseJoinColumns =
- @JoinColumn(name = "needs_id"))
- private Set<Needs> needs = new HashSet<>();
 }
