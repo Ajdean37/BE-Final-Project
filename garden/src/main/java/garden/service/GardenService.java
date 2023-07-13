@@ -5,11 +5,14 @@ import garden.dao.LocationDao;
 import garden.dao.NeedsDao;
 import garden.dao.PlantDao;
 import garden.entity.Location;
+import garden.entity.Needs;
 import garden.entity.Plant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -106,5 +109,81 @@ public class GardenService {
    plant = findPlantById(locationId, plantId);
   }
   return plant;
+ }
+
+ @Transactional(readOnly = false)
+ public GardenData.LocationNeeds saveNeeds(Long locationId, GardenData.LocationNeeds locationNeeds) {
+  Location location = findLocationById(locationId);
+  Long needsId = locationNeeds.getNeedsId();
+  Needs needs = findOrCreateNeeds(locationNeeds.getNeedsId(), needsId);
+  copyNeeds(needs, locationNeeds);
+  needs.setNeedsId(needsId);
+  location.getNeeds().add(needs);
+  Needs dbNeeds = needsDao.save(needs);
+  return new GardenData.LocationNeeds(dbNeeds);
+ }
+
+ private void copyNeeds(Needs needs, GardenData.LocationNeeds locationNeeds) {
+  needs.setNeedsId(locationNeeds.getNeedsId());
+  needs.setSoilType(locationNeeds.getSoilType());
+  needs.setSunExposure(locationNeeds.getSunExposure());
+  needs.setWaterAmount(locationNeeds.getWaterAmount());
+  needs.setPlantingSpace(locationNeeds.getPlantingSpace());
+ }
+
+ private Needs findOrCreateNeeds(Long needsId, Long locationId) {
+  Needs needs;
+
+  if (Objects.isNull(needsId)) {
+   needs = new Needs();
+  } else {
+   needs = findNeedsById(locationId, needsId);
+  }
+
+  for (Location location : needs.getLocations()) {
+   if (Objects.equals(location.getLocationId(), locationId)) {
+    needs.getLocations().add(location);
+   }
+  }
+  return needs;
+ }
+
+ private Needs findNeedsById(Long locationId, Long needsId) {
+  Needs needs =
+    needsDao.findById(needsId).orElseThrow(() -> new NoSuchElementException("Needs with ID = " + needsId + "was not " +
+      "found"));
+
+  if (locationId.equals(needs.getNeedsId())) {
+   return needs;
+  } else {
+   throw new IllegalArgumentException("Needs with ID = " + needsId + " does not match the location ID of " + locationId );
+  }
+ }
+
+ @Transactional(readOnly = true)
+ public List<GardenData> retrieveAllLocations() {
+  List<GardenData> result = new LinkedList<>();
+  List<Location> locations = locationDao.findAll();
+
+  for (Location location : locations) {
+   GardenData gd = new GardenData(location);
+   gd.getNeeds().clear();
+   gd.getPlant().clear();
+   result.add(gd);
+  }
+  return result;
+ }
+
+ @Transactional(readOnly = true)
+ public  GardenData retrieveLocationsById(Long locationId) {
+  Location location =
+    locationDao.findById(locationId).orElseThrow(() -> new NoSuchElementException("Location with ID = " + locationId + " does not exist"));
+  return new GardenData(location);
+ }
+
+ @Transactional(readOnly = false)
+ public void deleteLocationById(Long locationId) {
+  Location location = findLocationById(locationId);
+  locationDao.delete(location);
  }
 }

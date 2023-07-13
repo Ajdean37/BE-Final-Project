@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/garden")
 @Slf4j
@@ -39,4 +42,27 @@ public class GardenController {
   return gardenService.savePlant(locationId, plant);
  }
 
+ @PostMapping("/location/{locationId}/needs")
+ @ResponseStatus(code = HttpStatus.CREATED)
+ public GardenData.LocationNeeds addNeeds(@PathVariable Long locationId, @RequestBody GardenData.LocationNeeds locationNeeds) {
+  log.info("Adding needs {} {}", locationId, locationNeeds);
+  return gardenService.saveNeeds(locationId, locationNeeds);
+ }
+
+ @GetMapping
+ public List<GardenData> listAllLocations() {
+  return gardenService.retrieveAllLocations();
+ }
+
+ @GetMapping("/location/{locationId}")
+ public GardenData listLocationById(@PathVariable("locationId") Long locationId) {
+  return gardenService.retrieveLocationsById(locationId);
+ }
+
+ @DeleteMapping("/location/{locationId}")
+ public Map<String, String> deleteLocationById(@PathVariable("locationId") Long locationId) {
+  log.info("Deleting location ID {}", locationId);
+  gardenService.deleteLocationById(locationId);
+  return Map.of("message", "Deletion of location with ID = " + locationId + " was successful");
+ }
 }
